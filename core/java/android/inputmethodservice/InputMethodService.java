@@ -977,7 +977,7 @@ public class InputMethodService extends AbstractInputMethodService {
         if (fullScreenOverride) {
             isFullscreen = false;
         } else {
-            isFullscreen = mShowInputRequested && onEvaluateFullscreenMode();
+            isFullscreen = mShowInputRequested && (onEvaluateFullscreenMode() || onEvaluateSplitView());
         }
         boolean changed = mLastShowInputRequested != mShowInputRequested;
         if (mIsFullscreen != isFullscreen || !mFullscreenApplied) {
@@ -1073,6 +1073,25 @@ public class InputMethodService extends AbstractInputMethodService {
             return false;
         }
         return true;
+    }
+
+    /**
+     * Splitview stuff - FIXME: This needs a proper doc entry
+     * @hide
+     */
+    public boolean onEvaluateSplitView() {
+        if (mCandidatesFrame.getChildCount() > 0) {
+            Context candidateContext = mCandidatesFrame.getChildAt(0).getContext();
+            if (candidateContext instanceof Activity) {
+                return ((Activity) candidateContext).isSplitView();
+            } else {
+                Log.e("XPLOD", "NOT ACTIVITY");
+                return false;
+            }
+        } else {
+            Log.e("XPLOD", "NO CHILD");
+            return false;
+        }
     }
 
     /**
