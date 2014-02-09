@@ -189,6 +189,12 @@ public class PhoneWindowManager implements WindowManagerPolicy {
     private static final int KEY_MASK_ASSIST = 0x08;
     private static final int KEY_MASK_APP_SWITCH = 0x10;
 
+    // constants for rotation bits
+    private static final int ROTATION_0_MODE = 1;
+    private static final int ROTATION_90_MODE = 2;
+    private static final int ROTATION_180_MODE = 4;
+    private static final int ROTATION_270_MODE = 8;
+
     /**
      * These are the system UI flags that, when changing, can cause the layout
      * of the screen to change.
@@ -239,7 +245,6 @@ public class PhoneWindowManager implements WindowManagerPolicy {
     WindowManagerFuncs mWindowManagerFuncs;
     PowerManager mPowerManager;
     IStatusBarService mStatusBarService;
-    boolean mPreloadedRecentApps;
     final Object mServiceAquireLock = new Object();
     Vibrator mVibrator; // Vibrator for giving feedback of orientation changes
     SearchManager mSearchManager;
@@ -990,18 +995,7 @@ public class PhoneWindowManager implements WindowManagerPolicy {
                 triggerVirtualKeypress(KeyEvent.KEYCODE_BACK);
                 break;
             case KEY_ACTION_APP_SWITCH:
-                sendCloseSystemWindows(SYSTEM_DIALOG_REASON_RECENT_APPS);
-                try {
-                    IStatusBarService statusbar = getStatusBarService();
-                    if (statusbar != null) {
-                        statusbar.toggleRecentApps();
-                        mRecentAppsPreloaded = false;
-                    }
-                } catch (RemoteException e) {
-                    Slog.e(TAG, "RemoteException when showing recent apps", e);
-                    // re-acquire status bar service next time it is needed.
-                    mStatusBarService = null;
-                }
+                toggleRecentApps();
                 break;
             case KEY_ACTION_SEARCH:
                 launchAssistAction();
@@ -2987,7 +2981,7 @@ public class PhoneWindowManager implements WindowManagerPolicy {
     };
 
     private void toggleRecentApps() {
-        mPreloadedRecentApps = false; // preloading no longer needs to be canceled
+        mRecentAppsPreloaded = false; // preloading no longer needs to be canceled
         sendCloseSystemWindows(SYSTEM_DIALOG_REASON_RECENT_APPS);
         try {
             IStatusBarService statusbar = getStatusBarService();
@@ -5203,25 +5197,25 @@ public class PhoneWindowManager implements WindowManagerPolicy {
                 }
                 // Rotation setting bitmask
                 // 1=0 2=90 4=180 8=270
-                boolean allowed = true;
                 if (mUserRotationAngles < 0) {
-                    // Not set by user so use these defaults
-                     mUserRotationAngles = mAllowAllRotations == 1 ?
-                            (1 | 2 | 4 | 8) : // All angles
-                                (1 | 2 | 8); // All except 180
+                    // defaults
+                    mUserRotationAngles = mAllowAllRotations == 1 ?
+                            (ROTATION_0_MODE | ROTATION_90_MODE | ROTATION_180_MODE | ROTATION_270_MODE) : // All angles
+                            (ROTATION_0_MODE | ROTATION_90_MODE | ROTATION_270_MODE); // All except 180
                 }
+                boolean allowed = true;
                 switch (sensorRotation) {
                     case Surface.ROTATION_0:
-                        allowed = (mUserRotationAngles & 1) != 0;
+                        allowed = (mUserRotationAngles & ROTATION_0_MODE) != 0;
                         break;
                     case Surface.ROTATION_90:
-                        allowed = (mUserRotationAngles & 2) != 0;
+                        allowed = (mUserRotationAngles & ROTATION_90_MODE) != 0;
                         break;
                     case Surface.ROTATION_180:
-                        allowed = (mUserRotationAngles & 4) != 0;
+                        allowed = (mUserRotationAngles & ROTATION_180_MODE) != 0;
                         break;
                     case Surface.ROTATION_270:
-                        allowed = (mUserRotationAngles & 8) != 0;
+                        allowed = (mUserRotationAngles & ROTATION_270_MODE) != 0;
                         break;
                 }
                 if (allowed) {
