@@ -3736,6 +3736,11 @@ public final class Settings {
             VIBRATE_WHEN_RINGING,
             INCREASING_RING,
             RINGTONE,
+            PHONE_BLACKLIST_ENABLED,
+            PHONE_BLACKLIST_NOTIFY_ENABLED,
+            PHONE_BLACKLIST_PRIVATE_NUMBER_MODE,
+            PHONE_BLACKLIST_UNKNOWN_NUMBER_MODE,
+            PHONE_BLACKLIST_REGEX_ENABLED,
             NOTIFICATION_SOUND
         };
 
