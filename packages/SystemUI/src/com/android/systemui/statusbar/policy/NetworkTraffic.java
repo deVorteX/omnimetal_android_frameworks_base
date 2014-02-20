@@ -33,7 +33,7 @@ import com.android.systemui.R;
 public class NetworkTraffic extends TextView {
     public static final int MASK_UP = 0x00000001;        // Least valuable bit
     public static final int MASK_DOWN = 0x00000002;      // Second least valuable bit
-    public static final int MASK_BYTES = 0x00000004;     // Third least valuable bit
+    public static final int MASK_UNIT = 0x00000004;      // Third least valuable bit
     public static final int MASK_PERIOD = 0xFFFF0000;    // Most valuable 16 bits
 
     private static final int KILOBIT = 1000;
@@ -231,7 +231,7 @@ public class NetworkTraffic extends TextView {
     private void updateSettings() {
         ContentResolver resolver = mContext.getContentResolver();
         mState = Settings.System.getInt(resolver, Settings.System.NETWORK_TRAFFIC_STATE, 0);
-        if (isSet(mState, MASK_BYTES)) {
+        if (isSet(mState, MASK_UNIT)) {
             KB = KILOBYTE;
         } else {
             KB = KILOBIT;
