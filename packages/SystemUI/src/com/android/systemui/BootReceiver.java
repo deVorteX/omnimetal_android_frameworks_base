@@ -44,6 +44,7 @@ public class BootReceiver extends BroadcastReceiver {
                 Intent cpuinfo = new Intent(context, com.android.systemui.CPUInfoService.class);
                 context.startService(cpuinfo);
             }
+
         } catch (Exception e) {
             Log.e(TAG, "Can't start load average service", e);
         }

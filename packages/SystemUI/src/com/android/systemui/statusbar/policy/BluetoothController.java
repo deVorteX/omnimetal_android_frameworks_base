@@ -62,10 +62,6 @@ public class BluetoothController extends BroadcastReceiver {
         return mBondedDevices;
     }
 
-    public void unregisterController(Context context) {
-        context.unregisterReceiver(this);
-    }
-
     @Override
     public void onReceive(Context context, Intent intent) {
         final String action = intent.getAction();
