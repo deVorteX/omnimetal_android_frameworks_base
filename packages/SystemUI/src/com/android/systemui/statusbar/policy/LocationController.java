@@ -88,8 +88,15 @@ public class LocationController extends BroadcastReceiver {
         // Register to listen for changes in location settings.
         IntentFilter intentFilter = new IntentFilter();
         intentFilter.addAction(LocationManager.MODE_CHANGED_ACTION);
-        context.registerReceiverAsUser(mBroadcastReceiver,
-               UserHandle.ALL, intentFilter, null, new Handler());
+        context.registerReceiverAsUser(new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                String action = intent.getAction();
+                if (LocationManager.MODE_CHANGED_ACTION.equals(action)) {
+                    locationSettingsChanged();
+                }
+            }
+        }, UserHandle.ALL, intentFilter, null, new Handler());
 
         // Examine the current location state and initialize the status view.
         updateActiveLocationRequests();
@@ -97,30 +104,11 @@ public class LocationController extends BroadcastReceiver {
         mLastlocationMode = Settings.Secure.LOCATION_MODE_HIGH_ACCURACY;
     }
 
-    private final BroadcastReceiver mBroadcastReceiver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            String action = intent.getAction();
-            if (LocationManager.MODE_CHANGED_ACTION.equals(action)) {
-                locationSettingsChanged();
-            }
-        }
-    };
-
-    public void unregisterController(Context context) {
-        context.unregisterReceiver(this);
-        context.unregisterReceiver(mBroadcastReceiver);
-    }
-
     /**
      * Add a callback to listen for changes in location settings.
      */
     public void addSettingsChangedCallback(LocationSettingsChangeCallback cb) {
         mSettingsChangeCallbacks.add(cb);
-    }
-
-    public void removeSettingsChangedCallback(LocationSettingsChangeCallback cb) {
-        mSettingsChangeCallbacks.remove(cb);
     }
 
     /**
@@ -169,13 +157,14 @@ public class LocationController extends BroadcastReceiver {
      * Returns the actual location mode which is running
      */
     public int getLocationMode() {
-        final ContentResolver resolver = mContext.getContentResolver();
+        ContentResolver resolver = mContext.getContentResolver();
         // QuickSettings always runs as the owner, so specifically retrieve the settings
         // for the current foreground user.
         int mode = Settings.Secure.getIntForUser(resolver, Settings.Secure.LOCATION_MODE,
                 Settings.Secure.LOCATION_MODE_OFF, ActivityManager.getCurrentUser());
         return mode;
     }
+
 
     public boolean setBackLocationEnabled(int location) {
         switch (location) {
@@ -190,6 +179,12 @@ public class LocationController extends BroadcastReceiver {
                 break;
         }
         return setLocationMode(location);
+    }
+
+    public int locationMode() {
+        ContentResolver resolver = mContext.getContentResolver();
+        return Settings.Secure.getIntForUser(resolver, Settings.Secure.LOCATION_MODE,
+                Settings.Secure.LOCATION_MODE_OFF, ActivityManager.getCurrentUser());
     }
 
     public boolean isLocationAllowPanelCollapse() {
@@ -227,7 +222,7 @@ public class LocationController extends BroadcastReceiver {
     /**
      * Returns true if there currently exist active high power location requests.
      */
-    public boolean areActiveHighPowerLocationRequests() {
+    private boolean areActiveHighPowerLocationRequests() {
         List<AppOpsManager.PackageOps> packages
             = mAppOpsManager.getPackagesForOps(mHighPowerRequestAppOpArray);
         // AppOpsManager can return null when there is no requested data.
